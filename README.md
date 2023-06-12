@@ -9,3 +9,8 @@ my compile command
 note i was installing some extra libraries but i think that only library that is not included with mingw64 is nlohmann/json.hpp
 
 g++ -o program venusexporter.cpp -std=c++11 -lws2_32 -lwininet
+
+
+credits
+NeekumBokum help with testing
+SELEKCJONER (me) coding work
