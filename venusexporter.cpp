@@ -1,7 +1,5 @@
-#include <windows.h>
-#include <wininet.h>
-#include <fstream>
 #include <iostream>
+#include <fstream>
 #include <nlohmann/json.hpp>
 #include <map>
 #include <string>
@@ -9,6 +7,8 @@
 #include <iomanip> 
 #include <ctime>
 #include <chrono>
+#include <windows.h>
+#include <wininet.h>
 
 #pragma comment(lib, "wininet.lib")
 
@@ -56,74 +56,90 @@ std::string current_date_time() {
 }
 
 int main() {
+    int idczatu;
+    std::cout << "IMPORTANT NOTES!!! Your chat MUST be public otherwise exporter wont be able to access it!\nChat id is that number at the end of link that appears in search bar when you are in chat on venus\n\n Now please input the chat id\n\n";
+    std::cin >> idczatu;
+
     HINTERNET hInternet, hConnect;
     DWORD bytesRead;
 
     hInternet = InternetOpen("User Agent", INTERNET_OPEN_TYPE_DIRECT, NULL, NULL, 0);
-    if (hInternet == NULL) {
+    if (hInternet == NULL)
+    {
         printf("InternetOpen failed (%d)\n", GetLastError());
         return 1;
     }
 
-    std::string idczatu;
-    std::cout << "IMPORTANT NOTES!!! Your chat MUST be public otherwise exporter wont be able to access it!\nChat id is that number at the end of link that appears in search bar when you are in chat on venus\n\nNow please input chat id\n\n";
-    std::cin >> idczatu;
-
-    std::string url = "https://api.characterhub.org/api/venus/chats/" + idczatu;
-
+    std::string url = "https://api.characterhub.org/api/venus/chats/" + std::to_string(idczatu);
     hConnect = InternetOpenUrl(hInternet, url.c_str(), NULL, 0, INTERNET_FLAG_RELOAD, 0);
-    if (hConnect == NULL) {
+    if (hConnect == NULL)
+    {
         printf("InternetOpenUrl failed (%d)\n", GetLastError());
         return 1;
     }
 
-    char buffer[4096];
-    std::ofstream sourceFile("source.json");
-
-    while (InternetReadFile(hConnect, buffer, sizeof(buffer), &bytesRead) && bytesRead > 0) {
-        sourceFile.write(buffer, bytesRead);
-    }
-
-    sourceFile.close();
-    InternetCloseHandle(hConnect);
-    InternetCloseHandle(hInternet);
-
-    std::ifstream inputFile("source.json");
-    nlohmann::json wholeFileJson;
-    inputFile >> wholeFileJson;
-    inputFile.close();
-
     std::string botnejm;
-    std::cout << "\nplease input name of your character\n\n";
+    std::cout << "\nPlease input name of your character\n\n";
     std::cin >> botnejm;
     std::string juzernejm;
-    std::cout << "\nplease input your name that you used in chat\n\n";
+    std::cout << "\nPlease input your name that you used in chat\n\n";
     std::cin >> juzernejm;
     
     std::string currentDateTime = current_date_time();
 
+    std::ofstream sourceFile("source.txt");
+    char buffer[4096];
+
+    while (InternetReadFile(hConnect, buffer, sizeof(buffer), &bytesRead) && bytesRead > 0)
+    {
+        sourceFile.write(buffer, bytesRead);
+    }
+    sourceFile.close();
+    InternetCloseHandle(hConnect);
+    InternetCloseHandle(hInternet);
+
+    std::ifstream sourceFileToRead("source.txt");
+    std::stringstream ss;
+    ss << sourceFileToRead.rdbuf();
+    sourceFileToRead.close();
+
+    ordered_json wholeFileJson = ordered_json::parse(ss.str());
+    ss.str(std::string());
+
     nlohmann::json inputJson = wholeFileJson["chatMessages"];
 
-    long long last_send_date = 1000000000000; // Startowy send_date
-
-    std::string outputFileName = juzernejm + "s_chat_with_" + botnejm + ".jsonl";
+    std::string outputFileName = juzernejm + "'s chat with " + botnejm + ".jsonl";
     std::ofstream outputFile(outputFileName);
 
     outputFile << "{\"user_name\":\"" << juzernejm << "\",\"character_name\":\"" << botnejm << "\",\"create_date\":\"" << currentDateTime << "\",\"chat_metadata\":{\"note_prompt\":\"\",\"note_interval\":1,\"note_position\":1,\"note_depth\":4}}\n";
 
+    std::multimap<int, nlohmann::json> sortedInputJson;
+
     for (const auto& item : inputJson) {
-        last_send_date += 1; // Zwiększamy send_date o 1
+        sortedInputJson.insert({item["id"].get<int>(), item});
+    }
+
+    long long last_send_date = 1000000000000; // Starting send_date
+
+    for (const auto& pair : sortedInputJson) {
+        const auto& item = pair.second;
+        last_send_date++; // Increment send_date by 1 for each message
         std::string outputString = "{\"name\":\"" + std::string(item["is_bot"].get<bool>() ? botnejm : juzernejm) +
             "\",\"is_user\":" + std::string(item["is_bot"].get<bool>() ? "false" : "true") +
             ",\"is_name\":" + std::string(item["is_main"].get<bool>() ? "true" : "false") +
-            ",\"send_date\":" + std::to_string(last_send_date) + // Send_date zwiększane o 1
+            ",\"send_date\":" + std::to_string(last_send_date) +
             ",\"mes\":\"" + escape_json(item["message"].get<std::string>()) +
             "\",\"chid\":" + std::to_string(item["chat_id"].get<int>()) + "}";
 
         outputFile << outputString << '\n';
     }
     outputFile.close();
-std::cout << "\nSuccess! now just import the chat file or paste it into chats directory in silly\n\n";
+
+    wholeFileJson.erase("chat"); // Usuwamy "chat" z JSON'a przed zapisem do pliku źródłowego
+    std::ofstream updatedSourceFile("source.txt");
+    updatedSourceFile << wholeFileJson.dump();
+    updatedSourceFile.close();
+std::cout << "\nSuccess! now just import the chat file or paste it into chats directory in silly\n";
 system("pause");
     return 0;
 }
