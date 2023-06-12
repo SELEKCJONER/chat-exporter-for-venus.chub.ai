@@ -13,6 +13,15 @@
 #pragma comment(lib, "wininet.lib")
 
 using ordered_json = nlohmann::basic_json<std::map>;
+std::string replace_string(std::string subject, const std::string& search,
+                          const std::string& replace) {
+    size_t pos = 0;
+    while ((pos = subject.find(search, pos)) != std::string::npos) {
+         subject.replace(pos, search.length(), replace);
+         pos += replace.length();
+    }
+    return subject;
+}
 
 std::string escape_json(const std::string &s) {
     std::ostringstream o;
@@ -57,7 +66,7 @@ std::string current_date_time() {
 
 int main() {
     int idczatu;
-    std::cout << "IMPORTANT NOTES!!! Your chat MUST be public otherwise exporter wont be able to access it!\nChat id is that number at the end of link that appears in search bar when you are in chat on venus\n\n Now please input the chat id\n\n";
+    std::cout << "IMPORTANT NOTES!!! Your chat MUST be public otherwise exporter wont be able to access it!\nChat id is that number at the end of link that appears in search bar when you are in chat on venus\n\nNow please input the chat id\n\n";
     std::cin >> idczatu;
 
     HINTERNET hInternet, hConnect;
@@ -79,10 +88,10 @@ int main() {
     }
 
     std::string botnejm;
-    std::cout << "\nPlease input name of your character\n\n";
+    std::cout << "\nPlease input name of the character that you were chatting with\n\n";
     std::cin >> botnejm;
     std::string juzernejm;
-    std::cout << "\nPlease input your name that you used in chat\n\n";
+    std::cout << "\nPlease input the name that you want to use in this chat \n\n";
     std::cin >> juzernejm;
     
     std::string currentDateTime = current_date_time();
@@ -123,18 +132,27 @@ int main() {
 
     for (const auto& pair : sortedInputJson) {
         const auto& item = pair.second;
-        last_send_date++; // Increment send_date by 1 for each message
-        std::string outputString = "{\"name\":\"" + std::string(item["is_bot"].get<bool>() ? botnejm : juzernejm) +
-            "\",\"is_user\":" + std::string(item["is_bot"].get<bool>() ? "false" : "true") +
-            ",\"is_name\":" + std::string(item["is_main"].get<bool>() ? "true" : "false") +
-            ",\"send_date\":" + std::to_string(last_send_date) +
-            ",\"mes\":\"" + escape_json(item["message"].get<std::string>()) +
-            "\",\"chid\":" + std::to_string(item["chat_id"].get<int>()) + "}";
+        if (item["is_main"].get<bool>()) {  // Tylko wiadomości z is_main == true
+            last_send_date++; // Increment send_date by 1 for each message
 
-        outputFile << outputString << '\n';
+            // Replace {{char}} and {{user}} with botnejm and juzernejm
+            std::string message = replace_string(item["message"].get<std::string>(), "{{char}}", botnejm);
+            message = replace_string(message, "{{user}}", juzernejm);
+
+            std::string outputString = "{\"name\":\"" + std::string(item["is_bot"].get<bool>() ? botnejm : juzernejm) +
+                "\",\"is_user\":" + std::string(item["is_bot"].get<bool>() ? "false" : "true") +
+                ",\"is_name\":" + std::string(item["is_main"].get<bool>() ? "true" : "false") +
+                ",\"send_date\":" + std::to_string(last_send_date) +
+                ",\"mes\":\"" + escape_json(message) +
+                "\",\"chid\":" + std::to_string(item["chat_id"].get<int>()) + "}";
+
+            outputFile << outputString << '\n';
+        }
     }
     outputFile.close();
 
+
+	
     wholeFileJson.erase("chat"); // Usuwamy "chat" z JSON'a przed zapisem do pliku źródłowego
     std::ofstream updatedSourceFile("source.txt");
     updatedSourceFile << wholeFileJson.dump();
