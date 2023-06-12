@@ -12,6 +12,7 @@ g++ -o program venusexporter.cpp -std=c++11 -lws2_32 -lwininet
 
 
 credits
+
 NeekumBokum help with testing
 
 SELEKCJONER (me) coding work
