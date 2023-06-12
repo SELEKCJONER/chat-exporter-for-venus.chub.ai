@@ -7,7 +7,6 @@
 #include <string>
 #include <sstream> 
 #include <iomanip> 
-#include <random>
 #include <ctime>
 #include <chrono>
 
@@ -67,7 +66,7 @@ int main() {
     }
 
     std::string idczatu;
-    std::cout << "IMPORTANT NOTES!!! Your chat MUST be public otherwise exporter wont be able to access it!\nChat id is that number at the end of link that appears in search bar when you are in chat on venus\n\nNow please input chat id\n" << std::endl;
+    std::cout << "IMPORTANT NOTES!!! Your chat MUST be public otherwise exporter wont be able to access it!\nChat id is that number at the end of link that appears in search bar when you are in chat on venus\n\nNow please input chat id\n\n";
     std::cin >> idczatu;
 
     std::string url = "https://api.characterhub.org/api/venus/chats/" + idczatu;
@@ -95,34 +94,29 @@ int main() {
     inputFile.close();
 
     std::string botnejm;
-    std::cout << "\nPlease input name of the character that you have been chatting with\n\n";
+    std::cout << "\nplease input name of your character\n\n";
     std::cin >> botnejm;
     std::string juzernejm;
-    std::cout << "\nPlease input the name that you were using in chat\n\n";
+    std::cout << "\nplease input your name that you used in chat\n\n";
     std::cin >> juzernejm;
     
     std::string currentDateTime = current_date_time();
 
     nlohmann::json inputJson = wholeFileJson["chatMessages"];
 
-    // Losowy generator
-    std::random_device rd;
-    std::mt19937 gen(rd());
-    std::uniform_int_distribution<long long> distr(1000, 10000);
-
     long long last_send_date = 1000000000000; // Startowy send_date
 
-    std::string outputFileName = juzernejm + "'s chat with " + botnejm + ".jsonl";
+    std::string outputFileName = juzernejm + "s_chat_with_" + botnejm + ".jsonl";
     std::ofstream outputFile(outputFileName);
 
     outputFile << "{\"user_name\":\"" << juzernejm << "\",\"character_name\":\"" << botnejm << "\",\"create_date\":\"" << currentDateTime << "\",\"chat_metadata\":{\"note_prompt\":\"\",\"note_interval\":1,\"note_position\":1,\"note_depth\":4}}\n";
 
     for (const auto& item : inputJson) {
-        last_send_date += distr(gen); // Losowy przyrost do send_date
+        last_send_date += 1; // Zwiększamy send_date o 1
         std::string outputString = "{\"name\":\"" + std::string(item["is_bot"].get<bool>() ? botnejm : juzernejm) +
             "\",\"is_user\":" + std::string(item["is_bot"].get<bool>() ? "false" : "true") +
             ",\"is_name\":" + std::string(item["is_main"].get<bool>() ? "true" : "false") +
-            ",\"send_date\":" + std::to_string(last_send_date) + // Losowy send_date
+            ",\"send_date\":" + std::to_string(last_send_date) + // Send_date zwiększane o 1
             ",\"mes\":\"" + escape_json(item["message"].get<std::string>()) +
             "\",\"chid\":" + std::to_string(item["chat_id"].get<int>()) + "}";
 
