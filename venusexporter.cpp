@@ -66,7 +66,7 @@ std::string current_date_time() {
 
 int main() {
     int idczatu;
-    std::cout << "IMPORTANT NOTES!!! Your chat MUST be public otherwise exporter wont be able to access it through official venus.chub.ai api endpoint! https://api.characterhub.org/api/venus/chats/ \n\n api documentation can be accessed from here https://github.com/CharHubAI/CharHub-API \n\nChat id is that number at the end of link that appears in search bar when you are in chat on venus\n\nNow please input the chat id\n\n";
+    std::cout << "IMPORTANT NOTES!!! Your chat MUST be public otherwise exporter wont be able to access it through official www.chub.ai/ api endpoint! https://api.characterhub.org/api/venus/chats/ \n\n api documentation can be accessed from here https://github.com/CharHubAI/CharHub-API \n\nChat id is that number at the end of link that appears in search bar when you are in chat on venus\n\nNow please input the chat id\n\n";
     std::cin >> idczatu;
 
     HINTERNET hInternet, hConnect;
