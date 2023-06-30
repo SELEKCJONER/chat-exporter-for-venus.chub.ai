@@ -88,7 +88,7 @@ int main() {
     std::string juzernejm;
     std::cout << "\nPlease input the name that you want to use in this chat\n\n";
     std::cin >> juzernejm;
-	std::cout << "\n\nPlease specify tavern version\nType 1 for normal Tavern experimental i cant guarantee that it will work\n\nType anything else for silly tavern\n\n";
+	std::cout << "\n\nPlease specify tavern version\n\nType 1 for normal Tavern\n\nType anything else for silly tavern\n\n";
 	std::cin >> tavern_wersja;
     std::string currentDateTime = current_date_time();
 
@@ -146,7 +146,7 @@ int main() {
     std::ofstream outputFile(outputFileName);
 	if (tavern_wersja == 1)
 	{
-		outputFile << "{\"user_name\":\"" << juzernejm << "\",\"character_name\":\"" << botnejm << "\",\"create_date\":000000000001,\"notes\":\"\",\"notes_type\":\"discr\",\"mode\":\"chat\"}\n";
+		outputFile << "{\"user_name\":\"" << juzernejm << "\",\"character_name\":\"" << botnejm << "\",\"create_date\":100000000000,\"notes\":\"\",\"notes_type\":\"discr\",\"mode\":\"chat\"}\n";
 		long long last_send_date = 1000000000000; // Starting send_date
 
     for (const auto& pair : sortedInputJson) {
